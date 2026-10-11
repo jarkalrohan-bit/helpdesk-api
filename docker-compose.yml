@@ -1,0 +1,51 @@
+services:
+
+  postgres:
+    image: postgres:16-alpine
+
+    container_name: helpdesk-postgres
+
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: helpdesk
+      POSTGRES_USER: helpdesk_user
+      POSTGRES_PASSWORD: helpdesk_password
+
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db:/docker-entrypoint-initdb.d:ro
+
+
+
+
+  api:
+    image: helpdesk-api:latest
+
+    container_name: helpdesk-api
+
+    restart: unless-stopped
+
+    depends_on:
+      - postgres
+
+    ports:
+      - "3000:3000"
+
+    environment:
+      PORT: 3000
+
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: helpdesk
+      DB_USER: helpdesk_user
+      DB_PASSWORD: helpdesk_password
+
+      JWT_SECRET: 6fd5b734df73228048e109aaf8f2ece0ca0519fcd3192ac9b3a5fc10e7cd2aff
+
+volumes:
+  postgres_data:
+
