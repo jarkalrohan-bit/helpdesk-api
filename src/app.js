@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require("cors");
 
 const usersRouter = require("./routes/users");
 const ticketsRouter = require("./routes/tickets");
@@ -6,6 +7,12 @@ const commentsRouter = require("./routes/comments");
 const authRouter = require("./routes/auth");
 
 const app = express();
+
+app.use(cors({
+  origin: "http://localhost:5173",
+  methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
 
 // ============================================================
 // Global middleware

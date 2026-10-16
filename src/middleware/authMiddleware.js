@@ -3,41 +3,48 @@ const jwt = require("jsonwebtoken");
 const authMiddleware = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
-  // Check whether Authorization header exists
   if (!authHeader) {
     return res.status(401).json({
       error: "Authorization header required"
     });
   }
 
-  // Expected format:
-  // Authorization: Bearer <token>
-  const parts = authHeader.split(" ");
+  const parts = authHeader.trim().split(/\s+/);
 
-  if (parts.length !== 2 || parts[0] !== "Bearer" || !parts[1]) {
+  if (
+    parts.length !== 2 ||
+    parts[0].toLowerCase() !== "bearer" ||
+    !parts[1]
+  ) {
     return res.status(401).json({
       error: "Invalid authorization format"
     });
   }
 
-  const token = parts[1];
+  if (!process.env.JWT_SECRET) {
+    console.error("JWT_SECRET is not configured");
+
+    return res.status(500).json({
+      error: "Authentication configuration error"
+    });
+  }
 
   try {
-    // Verify JWT signature and expiration
     const decoded = jwt.verify(
-      token,
+      parts[1],
       process.env.JWT_SECRET
     );
 
-    // Make sure required user information exists
-    if (!decoded.userId || !decoded.role) {
+    if (
+      decoded.userId === undefined ||
+      decoded.userId === null ||
+      !decoded.role
+    ) {
       return res.status(401).json({
         error: "Invalid token payload"
       });
     }
 
-    // Store authenticated user information
-    // for use by protected routes
     req.user = {
       userId: decoded.userId,
       role: decoded.role
@@ -47,8 +54,14 @@ const authMiddleware = (req, res, next) => {
   } catch (error) {
     console.error("JWT verification error:", error.message);
 
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({
+        error: "Token expired. Please log in again."
+      });
+    }
+
     return res.status(401).json({
-      error: "Invalid or expired token"
+      error: "Invalid token. Please log in again."
     });
   }
 };

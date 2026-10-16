@@ -23,7 +23,7 @@ services:
 
 
   api:
-    image: helpdesk-api:latest
+    image: rohanjarkal/helpdesk-api:latest 
 
     container_name: helpdesk-api
 
@@ -44,8 +44,25 @@ services:
       DB_USER: helpdesk_user
       DB_PASSWORD: helpdesk_password
 
-      JWT_SECRET: 6fd5b734df73228048e109aaf8f2ece0ca0519fcd3192ac9b3a5fc10e7cd2aff
+      JWT_SECRET: ${JWT_SECRET}
+
+
+
+
+  
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:3000
+    container_name: helpdesk-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+
 
 volumes:
   postgres_data:
-
